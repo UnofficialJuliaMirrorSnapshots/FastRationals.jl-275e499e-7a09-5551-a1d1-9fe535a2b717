@@ -101,8 +101,8 @@ to generate the random `Rational{BigInt}` values that were processed.
 
 | n rand Rationals   | digits in den | `sum` relspeed | `prod` relspeed |
 |:------------------:|:-------------:|:------------:|:-------------:| 
-|200                 | 7_150         |  200         | 360           |
-|500                 | 17_700        |  340         | 600           |
+|200                 | 7_150         |  100         | 200           |
+|500                 | 17_700        |  200         | 400           |
 
 - matrix multiply and trace
 
@@ -142,23 +142,17 @@ using FastRationals
 
 midpoint = 76_963 // 100_003
 
-coarse_radius    = 1//64
-fine_radius      = 1//2^15
-maximin_radius   = 1//7890323589
-passthru_radius  = 1//7896121034
+coarse_radius  = 1//64
+fine_radius    = 1//32_768
+tiny_radius    = 1//7_896_121_034
 
+coarse_compact = compactify(midpoint, coarse_radius)      #         7//9
+fine_compact   = compactify(midpoint, fine_radius)        #       147//191
+tiny_compact   = compactify(midpoint, passthru_radius)    #    76_963//100_003
 
-coarse_compact   = compactify(midpoint, coarse_radius)      #         7//9
-fine_compact     = compactify(midpoint, fine_radius)        #       147//191
-maximin_compact  = compactify(midpoint, initial_radius)     #    60_752//78_939
-passthru_compact = compactify(midpoint, passthru_radius)    #    76_963//100_003
-
-
-abs(midpoint - passthru_compact) < passthru_radius     # true
-abs(midpoint - maximin_compact)  < maximin_radius      # true
-abs(midpoint - fine_compact)     < fine_radius         # true
-abs(midpoint - coarse_compact)   < coarse_radius       # true
-
+abs(midpoint - tiny_compact)   < tiny_radius    &&
+abs(midpoint - fine_compact)   < fine_radius    &&
+abs(midpoint - coarse_compact) < coarse_radius            #  true
 ```
 
 <sup><a name="neighborhood">[𝒃](#def)</a></sup> This `neighborhood` is given by 
@@ -210,7 +204,11 @@ abs(midpoint - coarse_compact)   < coarse_radius       # true
 
 ----
 
-### references
+## acknowledgements
+
+Klaus Crusius has contributed to this effort.
+
+## references
 
 This work stems from a [discussion](https://github.com/JuliaLang/julia/issues/11522) that began in 2015.
 
