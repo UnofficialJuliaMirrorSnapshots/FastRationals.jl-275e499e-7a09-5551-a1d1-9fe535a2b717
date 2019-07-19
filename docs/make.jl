@@ -3,7 +3,6 @@ using Documenter
 makedocs(
     sitename = "FastRationals.jl",
     authors = "Jeffrey Sarnoff",
-    modules = [FastRationals],
     pages = Any[
         "The BPP formula for PI" => "bpp.md",
         "Finding the Range" => "findingtherange.md",        

@@ -46,6 +46,74 @@ Of the numerator and denominator, we really want whichever is the larger in magn
     - `FastQBig` is best with numerators and denominators that have no more than 25_000 decimal digits.
 
 
+## performance relative to system rationals
+
+
+|    computation          | avg rel speedup |
+|:------------------------|:-----------------:|
+|      mul/div            |       20          |
+|      polyval            |       18          |
+|      add/sub            |       15          |
+|                         |                   |
+|      mat mul            |       10          |
+|      mat lu             |        5          |
+|      mat inv            |        3          |
+
+- avg is of FastQ32 and FastQ64
+- polynomial degree is 4, matrix size is 4x4
+
+- This script provided the [relative speedups](https://github.com/JeffreySarnoff/FastRationals.jl/blob/master/benchmarks/relspeed_Q32_Q64.jl).
+
+----
+## Rationals using BigInt
+
+
+#### 25_000 decimal digits
+
+Up to 25_000 digits, FastRational{BigInt}s `FastQBigInt` handily outperform `Rational{BigInt}`s in arithmetic calculation.
+When applied to appropriate computations, `FastQBigInt`s often run 2x-5x faster. These speedups were obtained evaluating
+[The Bailey–Borwein–Plouffe formula for π](https://github.com/JeffreySarnoff/FastRationals.jl/blob/master/benchmarks/BBP_for_pi.jl)
+at various depths (number of iterations) using `Rational{BigInt}` and `FastRational{BigInt}`. 
+
+----
+
+#### what works well
+
+The first column holds the number of random Rational{Int128}s used    
+to generate the random `Rational{BigInt}` values that were processed.
+
+These relative performance numbers are throughput multipliers.    
+In the time it takes to square an 8x8 Rational{BigInt} matrix,    
+__thirty__ 8x8 FastRational{BigInt} matrices may be squared.    
+
+- `sum` and `prod` 
+
+|  n rationals       | `sum` relspeed | `prod` relspeed |
+|:------------------:|:--------------:|:---------------:| 
+|  200               |    100         | 175             |
+|  500               |    200         | 350             |
+
+
+- matrix multiply and trace
+
+| n rationals        | `mul` relspeed  | `tr` relspeed |
+|:------------------:|:---------------:|:-------------:| 
+| 64 (8x8)           |  15             |      10       |
+| 225 (15x15)        |  20             |      20       |
+
+This script provided the [relative speedups](https://github.com/JeffreySarnoff/FastRationals.jl/blob/master/benchmarks/relspeed_QBigInt.jl).
+
+----
+
+#### what does not work well
+
+Other matrix functions (`det`, `lu`, `inv`) take much, much longer.  >> Fixes welcome <<.
+
+Meanwhile, some matrix functions convert first convert FastRationals to system rationals,    
+compute the result, and reconvert to FastRationals.
+
+----
+
 ### Most performant ranges using fast integers
 
 __FastRationals__ are at their most performant where overflow is absent or uncommon.  And vice versa: where overflow happens frequently, FastRationals have no intrinsic advantage.  How do we know what range of rational values are desireable?  We want to work with rational values that, for the most part, do not overflow when added, subtracted, multiplied or divided.  As rational calculation tends to grow numerator aor denominator magnitudes, it makes sense to further constrain the working range.  These tables are of some guidance. 
@@ -67,61 +135,6 @@ __FastRationals__ are at their most performant where overflow is absent or uncom
 
 
 > The calculation of these magnitudes appears [here]( https://github.com/JeffreySarnoff/FastRationals.jl/blob/master/docs/src/thestatelessway.md#quantifying-the-desireable).
-
-----
-
-## performance relative to system rationals
-
-#### actual results
-
-
-|    computation          |  Relative Speedup |
-|:------------------------|:-----------------:|
-|      mul/div            |       20          |
-|      polyval            |       18          |
-|      add/sub            |       15          |
-|                         |                   |
-|      mat mul            |       10          |
-|      mat lu             |        5          |
-|      mat inv            |        3          |
-
-- polynomial degree is 4, matrix size is 4x4
-
-- This script provided the [relative speedups](https://github.com/JeffreySarnoff/FastRationals.jl/blob/master/benchmarks/relative_speedup.jl).
-
-----
-## Rationals using BigInt
-
-##### what works well
-
-The first column holds the number of random Rational{Int128}s used    
-to generate the random `Rational{BigInt}` values that were processed.
-
-- `sum` and `prod`
-
-| n rand Rationals   | digits in den | `sum` relspeed | `prod` relspeed |
-|:------------------:|:-------------:|:------------:|:-------------:| 
-|200                 | 7_150         |  100         | 200           |
-|500                 | 17_700        |  200         | 400           |
-
-- matrix multiply and trace
-
-| n rand Rationals   | matmul relspeed | `tr` relspeed |
-|:------------------:|:---------------:|:-------------:| 
-| 64 (8x8)           |  40             |      20       |
-| 225 (15x15)        |  50             |      45       |
-
-
-- 25_000 decimal digits
-
-Up to 25_000 digit Rationals can be used with the expectation of 2x-5x improvement in throughput when applied to an appropriate computation. Here is alook at evaluating [The Bailey–Borwein–Plouffe formula for π](https://github.com/JeffreySarnoff/FastRationals.jl/blob/master/docs/src/bpp.md) with FastRationals.
-
-----
-
-##### what does not work well
-
-Other matrix functions (`det`, `lu`, `inv`) take much, much longer.  Fixes welcome.
-
 
 ----
 

@@ -6,10 +6,10 @@ export FastRational, FastQ32, FastQ64, FastQ128, FastQBig,
 using Base.Checked: add_with_overflow, sub_with_overflow, mul_with_overflow
 
 import Base: BitInteger, BitSigned, hash, show, repr, string, tryparse,
-    zero, one, iszero, isone, isinteger,
+    zero, one, iszero, isone, isinteger, iseven, isodd, isfinite, issubnormal, isinf, isnan,
     numerator, denominator, eltype, convert, promote_rule, decompose,
-    isinteger, typemax, typemin, sign, signbit, copysign, flipsign, abs, float,
-    ==, !=, <, <=, >=, >,
+    isinteger, typemax, typemin, sign, signbit, copysign, flipsign, abs, abs2, float,
+    ==, !=, <, <=, >=, >, cmp, isequal, isless,
     +, -, *, /, ^, //,
     inv, div, fld, cld, rem, mod, trunc, floor, ceil, round, widen
 
@@ -19,14 +19,44 @@ const FastSUN = Union{Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64}
 struct FastRational{T} <: Real
     num::T
     den::T
-       
-    FastRational{T}(num::T, den::T) where {T<:Union{Signed,Unsigned}} = new{T}(num, den)
-    function FastRational(num::T, den::T) where {T<:Union{Signed,Unsigned}}
+    
+    # this constructor is used when den might be <= 0 excluding typemin(T)
+    function FastRational(num::T, den::T) where {T<:SUN}
         iszero(den) && throw(DivideError)
+        num, den = flipsign(num, den), abs(den)
         return new{T}(num, den)
     end
+     
+    # this constructor is used when it is known that den>0   
+    FastRational{T}(num::T, den::T) where {T<:SUN} =
+        new{T}(num, den)
 end
-const RationalUnion = Union{FastRational,Rational}
+
+function FastRationalDenomOfT(num::T, den::T) where T<:SUN
+    iszero(den) && throw(DivideError)
+    num, den = flipsign(num, den), abs(den)
+    signbit(den) && throw(DomainError("denominator is typemin($T)"))
+    return FastRational{T}(num, den)
+end
+
+function FastRationalDenomNonneg(num::T, den::T) where T<:SUN
+    iszero(den) && throw(DivideError)
+    return FastRational{T}(num, den)
+end
+
+function FastRationalDenomNonzero(num::T, den::T) where T<:SUN
+    num, den = flipsign(num, den), abs(den)
+    signbit(den) && throw(DomainError("denominator is typemin($T)"))
+    return FastRational{T}(num, den)
+end
+
+       
+       # this constructor is used when it is known that den>0   
+    FastRational(numden::Tuple{T, T}) where {T<:SUN} =
+        new{T}(numden[1], numden[2])
+   
+
+const Rationals = Union{FastRational,Rational}
 
 numerator(x::FastRational{T}) where {T<:Integer} = x.num
 denominator(x::FastRational{T}) where {T<:Integer} = x.den
