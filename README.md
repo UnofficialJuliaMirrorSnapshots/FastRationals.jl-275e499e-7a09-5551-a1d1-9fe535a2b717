@@ -25,6 +25,7 @@
 
 ## FastRational types
 
+System rationals reduce the result of every rational input and each arithmetic operation to lowest terms.  FastRational types (`FastQ32`, `FastQ64`, `FastQBig`) reduce all rational inputs and reduce each rational value prior to presenting the value. Unlike system rationals, the result of a FastRational arithmetic operation is reduced only if overflow occur while it is being calculated.  With appropriately sized numerators and denominators, this takes less time. 
 
 ### FastRationals using fast integers
 
@@ -90,7 +91,7 @@ __thirty__ 8x8 FastRational{BigInt} matrices may be squared.
 
 |  n rationals       | `sum` relspeed | `prod` relspeed |
 |:------------------:|:--------------:|:---------------:| 
-|  200               |    100         | 175             |
+|  200               |    100         | 200             |
 |  500               |    200         | 350             |
 
 
@@ -99,7 +100,7 @@ __thirty__ 8x8 FastRational{BigInt} matrices may be squared.
 | n rationals        | `mul` relspeed  | `tr` relspeed |
 |:------------------:|:---------------:|:-------------:| 
 | 64 (8x8)           |  15             |      10       |
-| 225 (15x15)        |  20             |      20       |
+| 225 (15x15)        |  20             |      15       |
 
 This script provided the [relative speedups](https://github.com/JeffreySarnoff/FastRationals.jl/blob/master/benchmarks/relspeed_QBigInt.jl).
 
